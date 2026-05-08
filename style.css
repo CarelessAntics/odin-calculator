@@ -1,0 +1,61 @@
+* {
+    margin: 0;
+    padding: 0;
+    border: solid #000 1px;
+}
+
+body {
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    flex: 1;
+    align-items: stretch;
+    width:100%;
+}
+
+.sidebar {
+    flex: 1;
+    background-color: #aaa;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.calc-body {
+    display: flex;
+    flex: 0 1 25%;
+    align-self: center;
+}
+
+.calc-keys {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.key-row {
+    display: flex;
+    flex: 0 1 0;
+    background: #0f0;
+}
+
+.key {
+    flex: 1 0 50px;
+    border: solid #aaa 1px;
+    text-align: center;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.aspect-1 {
+    aspect-ratio: 1;
+}
