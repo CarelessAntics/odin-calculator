@@ -15,8 +15,15 @@ function Formula() {
             this.num += n;
         },
 
+        applyNum: function () {
+            if (this.num) {
+                this[this.depth].push(this.num);
+                this.num = ''
+            }
+        },
+
         addOperator: function (op) {
-            this[this.depth].push(this.num);
+            this.applyNum();
             this[this.depth].push(op);
             this.num = '';
         },
@@ -26,10 +33,7 @@ function Formula() {
         },
 
         increaseDepth: function (){
-            if (this.num) {
-                this[this.depth].push(this.num);
-                this.num = ''
-            }
+            this.applyNum();
             this[this.depth + 1] = [];
             this.depth += 1;
         },
@@ -40,11 +44,7 @@ function Formula() {
                 return;
             }
 
-            if (this.num) {
-                this[this.depth].push(this.num);
-                this.num = ''
-            }
-
+            this.applyNum();
             this[this.depth - 1].push(this[this.depth]);
             delete this[this.depth];
             this.depth -= 1;
@@ -166,10 +166,70 @@ function buildFormula(buttonValue) {
 
     } else if (buttonValue === '=') {
         // TODO Parse formula and print out the result
+        formula.applyNum();
+        parseSingleDepth(formula.getCurrent())
 
     }
 }
 
+function parseFormula(frm) {
+    // Single operation: 
+    // find next operator
+    // perform operation on elements left and right
+
+    // PEMDAS: parentheses -> (exponents) -> multiplication/division -> addition/subtraction
+    // First pass: resolve parenheses
+    // recursively:
+    //      If array contains arrays
+    //      get arrays and indices
+    //      loop over arrays and execute this function on them 
+
+}
+
+
+function parseSingleDepth(arr) {
+    const operators = [['*', '/'], ['+', '-']];
+
+    // Deal with operators in 2 passes to follow PEMDAS. First mult/div, then add/sub
+    // Get the indices of operators we're currently dealing with, then progressively subtract 2 to account for future splice operations
+    for (let op of operators) {
+        let operatorIndices = arr.reduce((acc, item, i) => {
+            if (op.includes(item)) acc.push(i);
+            return acc;
+        }, []).map((item, i) => item - 2 * i);
+
+        // Perform the calculations. Go over operators in order from left to right, and perform the operations on the elements on left and right sides
+        for (let index of operatorIndices) {
+            const operator = arr[index];
+            const left = parseFloat(arr[index - 1]);
+            const right = parseFloat(arr[index + 1]);
+            let result;
+
+            switch (operator) {
+                case '*':
+                    result = left * right;
+                    break;
+                
+                case '/':
+                    result = left / right;
+                    break;
+                    
+                case '+':
+                    result = left + right;
+                    break;
+
+                case '-':
+                    result = left - right;
+                    break;
+            }
+            // Then remove the elements of the operation and replace with result
+            arr.splice(index - 1, 3, result);
+        }
+    }
+    // If all has gone correctly, the array should only contain one value by design
+    console.log(arr)
+    return arr[0];
+}
 
 function createNumKeys() {
     // [9, 8, 7, ... 2, 1, ' ', 0, ',']
