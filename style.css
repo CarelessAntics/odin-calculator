@@ -59,6 +59,10 @@ body {
     justify-content: center;
 }
 
+.key span {
+    user-select: none;
+}
+
 .aspect-1 {
     aspect-ratio: 1;
 }
