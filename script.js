@@ -232,18 +232,10 @@ function parseSingleDepth(arr) {
 }
 
 function createNumKeys() {
-    // [9, 8, 7, ... 2, 1, ' ', 0, ',']
-    const numbers = [...Array(12).keys()]
-                                 .reverse()
-                                 .map(item => item - 2)
-                                 .toSpliced(-3, 3, ' ', 0, '.');
-
-    // Add the operator keys to the number array
-    const operators = ['+', '/', '*', '-'];
-    for (let i = 0; i < operators.length; i++) {
-        const spliceIndex = i*3 + i;
-        numbers.splice(spliceIndex, 0, operators[i])
-    }
+     const numbers = [9, 8, 7, '/',
+                     6, 5, 4, '*',
+                     3, 2, 1, '-',
+                     ' ', 0, '.', '+']
 
     let counter = 0;
     let row;
