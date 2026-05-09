@@ -43,10 +43,13 @@ function Formula() {
                 console.log("Can't decrease depth past 0!")
                 return;
             }
-
             this.applyNum();
-            this[this.depth - 1].push(this[this.depth]);
-            delete this[this.depth];
+            const current = this.getCurrent()
+
+            if (current.length > 0) {
+                this[this.depth - 1].push(current);
+            }
+            delete current;
             this.depth -= 1;
         },
 
@@ -148,8 +151,10 @@ function buildFormula(buttonValue) {
         console.log(formula.num);
 
     } else if (isOpenParenthesis) {
+        formula.applyNum();
+
         // If no operator is added before parenthesis, treat it as multiplication
-        if (!operators.includes(formula.getCurrent().at(-1))) {
+        if (!operators.includes(formula.getCurrent().at(-1)) && formula.getCurrent().length) {
             formula.addOperator('*');
         }
         formula.increaseDepth();
@@ -167,18 +172,33 @@ function buildFormula(buttonValue) {
     } else if (buttonValue === '=') {
         // TODO Parse formula and print out the result
         formula.applyNum();
-        parseSingleDepth(formula.getCurrent())
+        formula.flatten();
+        parseDepths(formula.getCurrent())
+        formula = new Formula();
 
     }
 }
 
-function parseFormula(frm) {
-    // Single operation: 
-    // find next operator
-    // perform operation on elements left and right
+function parseDepths(arr) {
+    
+    if (!arr.some(item => Array.isArray(item))) {
+        return parseSingleDepth(arr);
+    }
+
+    let arrayIndices = arr.reduce((acc, item, i) => {
+        if (Array.isArray(item)) acc.push(i);
+        return acc;
+    }, []);
+
+    for (let index of arrayIndices) {
+        let result = parseDepths(arr[index]);
+        arr.splice(index, 1, result);
+    }
+
+    return parseSingleDepth(arr)
 
     // PEMDAS: parentheses -> (exponents) -> multiplication/division -> addition/subtraction
-    // First pass: resolve parenheses
+    // First pass: resolve parentheses
     // recursively:
     //      If array contains arrays
     //      get arrays and indices
@@ -186,7 +206,9 @@ function parseFormula(frm) {
 
 }
 
-
+// Single operation: 
+// find next operator
+// perform operation on elements left and right
 function parseSingleDepth(arr) {
     const operators = [['*', '/'], ['+', '-']];
 
@@ -232,10 +254,10 @@ function parseSingleDepth(arr) {
 }
 
 function createNumKeys() {
-     const numbers = [9, 8, 7, '/',
-                     6, 5, 4, '*',
-                     3, 2, 1, '-',
-                     ' ', 0, '.', '+']
+     const numbers = [7, 8, 9, '/',
+                      4, 5, 6, '*',
+                      1, 2, 3, '-',
+                      ' ', 0, '.', '+']
 
     let counter = 0;
     let row;
@@ -252,8 +274,7 @@ function createNumKeys() {
         }
 
         let numKey = makeSquare(makeKey(num));
-
-        row.insertBefore(numKey, row.firstChild);
+        row.appendChild(numKey);
         counter++;
     }
     numberKeys.appendChild(row);
