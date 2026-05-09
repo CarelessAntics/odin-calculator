@@ -2,14 +2,16 @@ const output = document.querySelector('.calc-out');
 const calcBody = document.querySelector('.calc-body');
 const calcKeys = document.querySelector('.calc-keys');
 
-// Object for storing and building the calculation formula
-// Numerical indices contain an array of the current formula at a certain depth
+// Object for storing and building the calculation expression
+// Numbers are added to a buffer, and once an operator is selected or a parenthesis added, the buffer is pushed into an array
+// Numerical indices contain an array of the current expression at a certain depth
 // Depth increases and decreases with parentheses. Increase creates a new key with an empty array. Decrease pushes this array to the previous level
-function Formula() {
+function Expression() {
 
-    return { depth: 0,
-        num: '',
-        0: [],
+    return { 
+        depth: 0, // Current depth (level of parentheses)
+        num: '', // Number buffer
+        0: [], // Base level array at depth 0
 
         addDigit: function (n){
             this.num += n;
@@ -67,22 +69,10 @@ function Formula() {
     }
 };
 
-var formula = new Formula();
+var inputExpression = new Expression();
 
+// ==================================================
 // Build the calculator in JS:
-
-// Top row of buttons
-const topRow = document.createElement('div');
-topRow.classList.add('key-row');
-
-const parenthesisL = makeSquare(makeKey("("))
-const parenthesisR = makeSquare(makeKey(")"))
-const clearKey = makeKey("CLEAR");
-clearKey.style.flexGrow = 4;
-
-topRow.appendChild(parenthesisL);
-topRow.appendChild(parenthesisR);
-topRow.appendChild(clearKey);
 
 // Numbers and operators in the middle
 const numKeys = createNumKeys();
@@ -90,7 +80,6 @@ const numKeys = createNumKeys();
 // Equals key at the bottom
 const equalsKey = makeKey("=");
 
-calcKeys.appendChild(topRow);
 calcKeys.appendChild(numKeys);
 calcKeys.appendChild(equalsKey);
 
@@ -99,9 +88,7 @@ calcKeys.appendChild(equalsKey);
 calcBody.addEventListener('click', keyClick);
 addEventListener('keydown', keyPress);
 
-// Idea is the following:
-// Build a formula as a list of strings. Number keys increment current number string, operator keys push the current string to an array
-// Parentheses create a new array inside? Then the arrays are parsed from the inside out according to PEMDAS
+
 function keyClick(event) {
     // TODO split into functions that can also work with keypresses
     let target = event.target
@@ -124,57 +111,62 @@ function buildFormula(buttonValue) {
     const operators = ['+', '/', '*', '-']
 
     // Booleans for different actions based on user input
-    const isOperator = operators.includes(buttonValue) && formula.num;
+    const isOperator = operators.includes(buttonValue) 
+                       && (inputExpression.num || Array.isArray(inputExpression.getCurrent().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
     const isOperatorChange = operators.includes(buttonValue) // is operator
-                            && !formula.num // Current number string is empty
-                            && typeof formula.getCurrent().at(-1) === 'string' // Previous element is string, a.k.a not an array
-                            && formula.getCurrent().length; // Current array isn't empty
-    const isDecimal = buttonValue === '.' && !formula.num.includes('.');
+                            && !inputExpression.num // Current number string is empty
+                            && typeof inputExpression.getCurrent().at(-1) === 'string' // Previous element is string, a.k.a not an array
+                            && inputExpression.getCurrent().length; // Current array isn't empty
+    const isDecimal = buttonValue === '.' && !inputExpression.num.includes('.');
     const isDigit = /[0-9]+/.test(buttonValue);
     const isOpenParenthesis = buttonValue === '(';
-    const isCloseParenthesis = buttonValue === ')' && !operators.includes(formula.getCurrent().at(-1)); // Last element isn't an operator
+    const isCloseParenthesis = buttonValue === ')'; // Last element isn't an operator
 
     if (isOperator) {
-        formula.addOperator(buttonValue);
-        console.log(formula.getCurrent());
+        inputExpression.addOperator(buttonValue);
+        console.log(inputExpression.getCurrent());
 
     } else if (isOperatorChange) {
-        formula.changeLast(buttonValue);
-        console.log(formula.getCurrent());
+        inputExpression.changeLast(buttonValue);
+        console.log(inputExpression.getCurrent());
 
     } else if (isDecimal) {
-        formula.addDigit(buttonValue);
-        console.log(formula.num);
+        inputExpression.addDigit(buttonValue);
+        console.log(inputExpression.num);
 
     } else if (isDigit) {
-        formula.addDigit(buttonValue);
-        console.log(formula.num);
+        inputExpression.addDigit(buttonValue);
+        console.log(inputExpression.num);
 
     } else if (isOpenParenthesis) {
-        formula.applyNum();
+        inputExpression.applyNum();
 
         // If no operator is added before parenthesis, treat it as multiplication
-        if (!operators.includes(formula.getCurrent().at(-1)) && formula.getCurrent().length) {
-            formula.addOperator('*');
+        if (!operators.includes(inputExpression.getCurrent().at(-1)) && inputExpression.getCurrent().length) {
+            inputExpression.addOperator('*');
         }
-        formula.increaseDepth();
-        console.log(formula.getCurrent());
-        console.log(formula.num);
+        inputExpression.increaseDepth();
+        console.log(inputExpression.getCurrent());
+        console.log(inputExpression.num);
 
     } else if (isCloseParenthesis) {
-        formula.decreaseDepth();
-        console.log(formula.getCurrent());
-        console.log(formula.num);
+        inputExpression.applyNum();
+        if (!operators.includes(inputExpression.getCurrent().at(-1))) {
+            inputExpression.decreaseDepth();
+        }
+        console.log(inputExpression.getCurrent());
+        console.log(inputExpression.num);
 
     } else if (buttonValue === 'CLEAR') {
-        formula = new Formula();
+        inputExpression = new Expression();
 
-    } else if (buttonValue === '=') {
-        // TODO Parse formula and print out the result
-        formula.applyNum();
-        formula.flatten();
-        parseDepths(formula.getCurrent())
-        formula = new Formula();
+    } else if (buttonValue === '=' || buttonValue === 'Enter') {
+        // TODO Parse inputExpression and print out the result
+        inputExpression.applyNum();
+        inputExpression.flatten();
+        let result = parseDepths(inputExpression.getCurrent())
+        console.log(result)
+        inputExpression = new Expression();
 
     }
 }
@@ -249,12 +241,13 @@ function parseSingleDepth(arr) {
         }
     }
     // If all has gone correctly, the array should only contain one value by design
-    console.log(arr)
+    // console.log(arr)
     return arr[0];
 }
 
 function createNumKeys() {
-     const numbers = [7, 8, 9, '/',
+     const numbers = ['(', ')', '<=', 'CLEAR',
+                      7, 8, 9, '/',
                       4, 5, 6, '*',
                       1, 2, 3, '-',
                       ' ', 0, '.', '+']
