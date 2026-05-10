@@ -9,6 +9,15 @@ const calcKeys = document.querySelector('.calc-keys');
 // CALCULATOR VISUALS / USER FACING
 // ====================================
 
+const resultDisplay = document.createElement('div');
+const expressionDisplay = document.createElement('div');
+
+resultDisplay.classList.add("result");
+expressionDisplay.classList.add("expression");
+
+output.appendChild(resultDisplay);
+output.appendChild(expressionDisplay);
+
 const numKeys = createNumKeys();
 const equalsKey = makeKey("=");
 
@@ -96,6 +105,7 @@ function Expression() {
         depth: 0, // Current depth (level of parentheses)
         num: '', // Number buffer
         0: [], // Base level array at depth 0
+        display: '', // User readable version of the formula
 
         addDigit: function (n){
             this.num += n;
@@ -104,13 +114,15 @@ function Expression() {
         applyNum: function () {
             if (this.num) {
                 this[this.depth].push(this.num);
-                this.num = ''
+                this.display += `${this.num} `;
+                this.num = '';
             }
         },
 
         addOperator: function (op) {
             this.applyNum();
             this[this.depth].push(op);
+            this.display += `${op} `;
             this.num = '';
         },
 
@@ -149,7 +161,8 @@ function Expression() {
                     this.decreaseDepth()
                 }
             }
-        }
+            
+        },
     }
 };
 
@@ -171,12 +184,13 @@ function buildFormula(buttonValue) {
                             && inputExpression.getCurrent().length; // Current array isn't empty
     const isDecimalPoint = (buttonValue === '.' || buttonValue === ',') // I'm a European heathen who allows commas as decimal separators
                             && !inputExpression.num.includes('.'); // Does the number already have a decimal point in it
-    const isDigit = /[0-9]+/.test(buttonValue);
+    const isDigit = /^[0-9]+/.test(buttonValue);
     const isOpenParenthesis = buttonValue === '(';
     const isCloseParenthesis = buttonValue === ')';
 
     if (isOperator) {
         inputExpression.addOperator(buttonValue);
+        resultDisplay.textContent = inputExpression.num;
         console.log(inputExpression.getCurrent());
 
     } else if (isOperatorChange) {
@@ -185,10 +199,12 @@ function buildFormula(buttonValue) {
 
     } else if (isDecimalPoint) {
         inputExpression.addDigit(buttonValue);
+        resultDisplay.textContent = inputExpression.num;
         console.log(inputExpression.num);
 
     } else if (isDigit) {
         inputExpression.addDigit(buttonValue);
+        resultDisplay.textContent = inputExpression.num;
         console.log(inputExpression.num);
 
     } else if (isOpenParenthesis) {
@@ -218,9 +234,10 @@ function buildFormula(buttonValue) {
         inputExpression.applyNum();
         inputExpression.flatten();
         let result = parseDepths(inputExpression.getCurrent())
-        console.log(result)
+        resultDisplay.textContent = result;
         inputExpression = new Expression();
     }
+    expressionDisplay.textContent = inputExpression.display;
 }
 
 function parseDepths(arr) {

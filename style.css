@@ -30,6 +30,7 @@ body {
 
 .calc-body {
     display: flex;
+    flex-direction: column;
     flex: 0 1 25%;
     align-self: center;
 }
@@ -65,4 +66,22 @@ body {
 
 .aspect-1 {
     aspect-ratio: 1;
+}
+
+.calc-out {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.result {
+    flex:0 0 32px;
+    font-size: 32px;
+    box-sizing: border-box;
+
+}
+
+.expression {
+    flex: 1 0 18px;
+    font-size: 18px;
 }
