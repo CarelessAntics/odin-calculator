@@ -34,12 +34,12 @@ function keyClick(event) {
     }
     if (target.id.includes('key')) {
         const buttonValue = target.firstChild.textContent
-        buildFormula(buttonValue);
+        buildFormula(buttonValue, inputExpression);
     }
 }
 
 function keyPress(event) {
-    buildFormula(event.key);
+    buildFormula(event.key, inputExpression);
 }
 
 function createNumKeys() {
@@ -209,6 +209,10 @@ function Expression() {
             if (this.getCurrentArray().length === 0 && this.depth > 0) {
                 this.decreaseDepth()
             }
+        },
+
+        reset: function () {
+            Object.assign(this, Expression());
         }
     }
 };
@@ -219,119 +223,99 @@ var inputExpression = new Expression();
 // CALCULATOR LOGIC
 // ====================================
 
-function buildFormula(buttonValue) {
-    const operators = inputExpression.supportedOps;
+function buildFormula(buttonValue, expressionObj) {
+    const operators = expressionObj.supportedOps;
 
     // Booleans for different actions based on user input
+    // This looks disgusting, but I can't think of a way to make it prettier or more readable
     const isOperator = operators.includes(buttonValue) 
-                       && (inputExpression.num || Array.isArray(inputExpression.getCurrentArray().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
+                       && (expressionObj.num || Array.isArray(expressionObj.getCurrentArray().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
     const isOperatorChange = operators.includes(buttonValue) // is operator
-                            && !inputExpression.num // Current number buffer is empty
-                            && typeof inputExpression.getCurrentArray().at(-1) === 'string' // Previous element is string, a.k.a not an array
-                            && inputExpression.getCurrentArray().length; // Current array isn't empty
+                            && !expressionObj.num // Current number buffer is empty
+                            && typeof expressionObj.getCurrentArray().at(-1) === 'string' // Previous element is string, a.k.a not an array
+                            && expressionObj.getCurrentArray().length; // Current array isn't empty
     const isDecimalPoint = (buttonValue === '.' || buttonValue === ',') // I'm a European heathen who allows commas as decimal separators
-                            && !inputExpression.num.includes('.'); // Does the number already have a decimal point in it
+                            && !expressionObj.num.includes('.'); // Does the number already have a decimal point in it
     const isDigit = /^[0-9]+/.test(buttonValue);
     const isOpenParenthesis = buttonValue === '(';
     const isCloseParenthesis = buttonValue === ')';
 
     if (isOperator) {
-        inputExpression.addOperator(buttonValue);
-        console.log(inputExpression.getCurrentArray());
+        expressionObj.addOperator(buttonValue);
 
     } else if (isOperatorChange) {
-        inputExpression.changeLastOperator(buttonValue);
-        console.log(inputExpression.getCurrentArray());
+        expressionObj.changeLastOperator(buttonValue);
 
     } else if (isDecimalPoint) {
-        inputExpression.addDigit(buttonValue);
-        console.log(inputExpression.num);
+        expressionObj.addDigit(buttonValue);
 
     } else if (isDigit) {
-        inputExpression.addDigit(buttonValue);
-        console.log(inputExpression.num);
+        expressionObj.addDigit(buttonValue);
 
     } else if (isOpenParenthesis) {
-        inputExpression.applyNum();
+        expressionObj.applyNum();
 
         // If no operator is added before parenthesis, treat it as multiplication
-        if (!operators.includes(inputExpression.getCurrentArray().at(-1)) && inputExpression.getCurrentArray().length) {
-            inputExpression.addOperator('*');
+        if (!operators.includes(expressionObj.getCurrentArray().at(-1)) && expressionObj.getCurrentArray().length) {
+            expressionObj.addOperator('*');
         }
-        inputExpression.increaseDepth();
-        console.log(inputExpression.getCurrentArray());
-        console.log(inputExpression.num);
+        expressionObj.increaseDepth();
 
     } else if (isCloseParenthesis) {
-        inputExpression.applyNum();
-        if (!operators.includes(inputExpression.getCurrentArray().at(-1))) {
-            inputExpression.decreaseDepth();
+        expressionObj.applyNum();
+        if (!operators.includes(expressionObj.getCurrentArray().at(-1))) {
+            expressionObj.decreaseDepth();
         }
-        console.log(inputExpression.getCurrentArray());
-        console.log(inputExpression.num);
     
     } else if (buttonValue === '+/-') {
-        inputExpression.flipSign();
-        console.log(inputExpression.num)
+        expressionObj.flipSign();
 
     } else if (buttonValue === 'CLEAR') {
-        inputExpression = new Expression();
+        expressionObj.flatten();
+        expressionObj.reset();
 
     } else if (buttonValue === '<=' || buttonValue === 'Backspace') {
-        inputExpression.goBackOne()
-        resultDisplay.textContent = inputExpression.num;
-        console.log(inputExpression.getCurrentArray())
+        expressionObj.goBackOne()
     }
 
-    resultDisplay.textContent = inputExpression.num;
-    expressionDisplay.textContent = inputExpression.display;
+    resultDisplay.textContent = expressionObj.num;
+    expressionDisplay.textContent = expressionObj.display;
 
     if (buttonValue === '=' || buttonValue === 'Enter') {
-        // TODO Parse inputExpression and print out the result
-        inputExpression.applyNum();
-        inputExpression.flatten();
-        resultDisplay.textContent = parseDepths(inputExpression.getCurrentArray());
-        expressionDisplay.textContent = inputExpression.display;
-        inputExpression = new Expression();
+        expressionObj.applyNum();
+        expressionObj.flatten();
+        resultDisplay.textContent = parseExpression(expressionObj.getCurrentArray());
+        expressionDisplay.textContent = expressionObj.display;
+        // expressionObj = new Expression();
+        expressionObj.reset();
     }
 }
 
-function parseDepths(arr) {
-    
+// Recursively walk through the expression, collapsing the nested arrays to single values and finally operating on the resulting non-nested array
+function parseExpression(arr) {
     if (!arr.some(item => Array.isArray(item))) {
-        return parseSingleDepth(arr);
+        return operate(arr);
     }
 
-    let arrayIndices = arr.reduce((acc, item, i) => {
+    let arrayLocations = arr.reduce((acc, item, i) => {
         if (Array.isArray(item)) acc.push(i);
         return acc;
     }, []);
 
-    for (let index of arrayIndices) {
-        let result = parseDepths(arr[index]);
-        if (typeof result === 'string') return result;
-        arr.splice(index, 1, result);
+    for (let loc of arrayLocations) {
+        let result = parseExpression(arr[loc]);
+        if (typeof result === 'string') return result; // Division by zero
+        arr.splice(loc, 1, result);
     }
 
-    return parseSingleDepth(arr)
-
-    // PEMDAS: parentheses -> (exponents) -> multiplication/division -> addition/subtraction
-    // First pass: resolve parentheses
-    // recursively:
-    //      If array contains arrays
-    //      get arrays and indices
-    //      loop over arrays and execute this function on them 
-
+    return operate(arr)
 }
 
-// Single operation: 
-// find next operator
-// perform operation on elements left and right
-function parseSingleDepth(arr) {
-    const operators = [['*', '/'], ['+', '-']];
-
+// Operate on a non-nested array
+function operate(arr) {
     // Deal with operators in 2 passes to follow PEMDAS. First mult/div, then add/sub
-    // Get the indices of operators we're currently dealing with, then progressively subtract 2 to account for future splice operations
+    // Get the indices of operators we're currently dealing with, then subtract 0, 2, 4, etc to avoid mutating the array while looping through it due to future splice operations
+    const operators = [['*', '/'], ['+', '-']];
     for (let op of operators) {
         let operatorIndices = arr.reduce((acc, item, i) => {
             if (op.includes(item)) acc.push(i);
@@ -369,8 +353,7 @@ function parseSingleDepth(arr) {
             arr.splice(index - 1, 3, result);
         }
     }
-    // If all has gone correctly, the array should only contain one value by design
-    // console.log(arr)
+    // If all has gone correctly, the array should only contain one value as designed
     return arr[0];
 }
 
