@@ -106,6 +106,7 @@ function Expression() {
         num: '', // Number buffer
         0: [], // Base level array at depth 0
         display: '', // User readable version of the formula
+        supportedOps: ['+', '/', '*', '-'],
 
         addDigit: function (n){
             this.num += n;
@@ -161,8 +162,37 @@ function Expression() {
                     this.decreaseDepth()
                 }
             }
-            
+            // In case there is a trailing operator
+            // Should this be here? Maybe add it to the solver function or button call
+            if (this.supportedOps.includes(this.getCurrent().at(-1))) {
+                // backspace
+            }
         },
+
+        removeLast: function () {
+            if (this.num) {
+                this.num = this.num.slice(0, -1);
+                return;
+            }
+
+            // If the last element is an operator
+            if (this.supportedOps.includes(this.getCurrent().at(-1))) {
+                this.getCurrent().pop(); // the operator
+
+                // If the new last element is a number (not an array), return it to be editable
+                if (!Array.isArray(this.getCurrent().at(-1))) {
+                    this.num = this.getCurrent().pop();
+                }
+                return;
+            }
+
+            // Last element is a complete array
+            if (Array.isArray(this.getCurrent().at(-1))) {
+                this[this.depth + 1] = this.getCurrent().pop();
+                this.depth += 1;
+                this.num = this.getCurrent().pop()
+            }
+        }
     }
 };
 
@@ -228,6 +258,11 @@ function buildFormula(buttonValue) {
 
     } else if (buttonValue === 'CLEAR') {
         inputExpression = new Expression();
+
+    } else if (buttonValue === '<=' || buttonValue === 'Backspace') {
+        inputExpression.removeLast()
+        resultDisplay.textContent = inputExpression.num;
+        console.log(inputExpression.num)
 
     } else if (buttonValue === '=' || buttonValue === 'Enter') {
         // TODO Parse inputExpression and print out the result
