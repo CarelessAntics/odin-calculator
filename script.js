@@ -38,11 +38,9 @@ function keyClick(event) {
     }
 }
 
-
 function keyPress(event) {
     buildFormula(event.key);
 }
-
 
 function createNumKeys() {
     // Current layout generator switches rows after 4 elements
@@ -50,12 +48,12 @@ function createNumKeys() {
                       7, 8, 9, '/',
                       4, 5, 6, '*',
                       1, 2, 3, '-',
-                      ' ', 0, '.', '+'];
+                      '+/-', 0, '.', '+'];
 
-    const elementsPerRow = 4
+    const elementsPerRow = 4;
     let counter = 0;
     let row;
-    const numberKeys = document.createElement('div')
+    const numberKeys = document.createElement('div');
 
     for (num of numbers) {
         if (counter % elementsPerRow === 0) {
@@ -112,6 +110,14 @@ function Expression() {
             this.num += n;
         },
 
+        flipSign: function () {
+            if (this.num[0] === '-') {
+                this.num = this.num.slice(1);
+            } else {
+                this.num = '-' + this.num;
+            }
+        },
+
         applyNum: function () {
             if (this.num) {
                 this[this.depth].push(this.num);
@@ -127,7 +133,7 @@ function Expression() {
             this.num = '';
         },
 
-        changeLast: function (value) {
+        changeLastOperator: function (value) {
             this[this.depth].splice(-1, 1, value)
         },
 
@@ -165,7 +171,7 @@ function Expression() {
             if (this.supportedOps.includes(this.getCurrentArray().at(-1))) {
                 this.getCurrentArray().pop();
             }
-            
+
             if (this.depth !== 0) {
                 for (let i = this.depth; i > 0; i--) {
                     this.decreaseDepth();
@@ -234,7 +240,7 @@ function buildFormula(buttonValue) {
         console.log(inputExpression.getCurrentArray());
 
     } else if (isOperatorChange) {
-        inputExpression.changeLast(buttonValue);
+        inputExpression.changeLastOperator(buttonValue);
         console.log(inputExpression.getCurrentArray());
 
     } else if (isDecimalPoint) {
@@ -263,6 +269,10 @@ function buildFormula(buttonValue) {
         }
         console.log(inputExpression.getCurrentArray());
         console.log(inputExpression.num);
+    
+    } else if (buttonValue === '+/-') {
+        inputExpression.flipSign();
+        console.log(inputExpression.num)
 
     } else if (buttonValue === 'CLEAR') {
         inputExpression = new Expression();
@@ -299,6 +309,7 @@ function parseDepths(arr) {
 
     for (let index of arrayIndices) {
         let result = parseDepths(arr[index]);
+        if (typeof result === 'string') return result;
         arr.splice(index, 1, result);
     }
 
@@ -340,6 +351,9 @@ function parseSingleDepth(arr) {
                     break;
                 
                 case '/':
+                    if (right === 0) {
+                        return "You fool! You've doomed us all! (Division by zero)";
+                    }
                     result = left / right;
                     break;
                     
