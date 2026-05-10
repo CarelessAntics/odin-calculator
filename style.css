@@ -75,13 +75,15 @@ body {
 }
 
 .result {
-    flex:0 0 32px;
+    flex:0 0 42px;
     font-size: 32px;
+    line-height: 42px;;
     box-sizing: border-box;
 
 }
 
 .expression {
-    flex: 1 0 18px;
+    flex: 1 0 24px;
     font-size: 18px;
+    line-height: 24px;
 }

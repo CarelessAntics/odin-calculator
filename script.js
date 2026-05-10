@@ -133,6 +133,7 @@ function Expression() {
 
         increaseDepth: function (){
             this.applyNum();
+            this.display += '( ';
             this[this.depth + 1] = [];
             this.depth += 1;
         },
@@ -143,54 +144,64 @@ function Expression() {
                 return;
             }
             this.applyNum();
-            const current = this.getCurrent()
+            const current = this.getCurrentArray()
 
             if (current.length > 0) {
                 this[this.depth - 1].push(current);
+                this.display += ') ';
+            } else {
+                // In the case of empty array, parentheses make no sense, so remove the opening parenthesis
+                this.display = this.display.slice(0, -2);
             }
             delete current;
             this.depth -= 1;
         },
 
-        getCurrent: function () {
+        getCurrentArray: function () {
             return this[this.depth];
         },
 
         flatten: function () {
+            if (this.supportedOps.includes(this.getCurrentArray().at(-1))) {
+                this.getCurrentArray().pop();
+            }
+            
             if (this.depth !== 0) {
                 for (let i = this.depth; i > 0; i--) {
-                    this.decreaseDepth()
+                    this.decreaseDepth();
                 }
-            }
-            // In case there is a trailing operator
-            // Should this be here? Maybe add it to the solver function or button call
-            if (this.supportedOps.includes(this.getCurrent().at(-1))) {
-                // backspace
             }
         },
 
-        removeLast: function () {
+        goBackOne: function () {
+            // Case: Number buffer is not empty
             if (this.num) {
                 this.num = this.num.slice(0, -1);
                 return;
             }
 
-            // If the last element is an operator
-            if (this.supportedOps.includes(this.getCurrent().at(-1))) {
-                this.getCurrent().pop(); // the operator
+            // Case: The last element is an operator
+            if (this.supportedOps.includes(this.getCurrentArray().at(-1))) {
+                this.getCurrentArray().pop(); // the operator
 
                 // If the new last element is a number (not an array), return it to be editable
-                if (!Array.isArray(this.getCurrent().at(-1))) {
-                    this.num = this.getCurrent().pop();
+                if (!Array.isArray(this.getCurrentArray().at(-1))) {
+                    this.num = this.getCurrentArray().pop();
                 }
                 return;
             }
 
-            // Last element is a complete array
-            if (Array.isArray(this.getCurrent().at(-1))) {
-                this[this.depth + 1] = this.getCurrent().pop();
+            // Case: Last element is a complete array
+            if (Array.isArray(this.getCurrentArray().at(-1))) {
+                this[this.depth + 1] = this.getCurrentArray().pop();
                 this.depth += 1;
-                this.num = this.getCurrent().pop()
+                this.num = this.getCurrentArray().pop()
+                return;
+            }
+
+            // Case: We are in an empty sub-array
+            if (this.getCurrentArray().length === 0 && this.depth > 0) {
+                this.decreaseDepth()
             }
         }
     }
@@ -203,15 +214,15 @@ var inputExpression = new Expression();
 // ====================================
 
 function buildFormula(buttonValue) {
-    const operators = ['+', '/', '*', '-']
+    const operators = inputExpression.supportedOps;
 
     // Booleans for different actions based on user input
     const isOperator = operators.includes(buttonValue) 
-                       && (inputExpression.num || Array.isArray(inputExpression.getCurrent().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
+                       && (inputExpression.num || Array.isArray(inputExpression.getCurrentArray().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
     const isOperatorChange = operators.includes(buttonValue) // is operator
                             && !inputExpression.num // Current number buffer is empty
-                            && typeof inputExpression.getCurrent().at(-1) === 'string' // Previous element is string, a.k.a not an array
-                            && inputExpression.getCurrent().length; // Current array isn't empty
+                            && typeof inputExpression.getCurrentArray().at(-1) === 'string' // Previous element is string, a.k.a not an array
+                            && inputExpression.getCurrentArray().length; // Current array isn't empty
     const isDecimalPoint = (buttonValue === '.' || buttonValue === ',') // I'm a European heathen who allows commas as decimal separators
                             && !inputExpression.num.includes('.'); // Does the number already have a decimal point in it
     const isDigit = /^[0-9]+/.test(buttonValue);
@@ -220,59 +231,59 @@ function buildFormula(buttonValue) {
 
     if (isOperator) {
         inputExpression.addOperator(buttonValue);
-        resultDisplay.textContent = inputExpression.num;
-        console.log(inputExpression.getCurrent());
+        console.log(inputExpression.getCurrentArray());
 
     } else if (isOperatorChange) {
         inputExpression.changeLast(buttonValue);
-        console.log(inputExpression.getCurrent());
+        console.log(inputExpression.getCurrentArray());
 
     } else if (isDecimalPoint) {
         inputExpression.addDigit(buttonValue);
-        resultDisplay.textContent = inputExpression.num;
         console.log(inputExpression.num);
 
     } else if (isDigit) {
         inputExpression.addDigit(buttonValue);
-        resultDisplay.textContent = inputExpression.num;
         console.log(inputExpression.num);
 
     } else if (isOpenParenthesis) {
         inputExpression.applyNum();
 
         // If no operator is added before parenthesis, treat it as multiplication
-        if (!operators.includes(inputExpression.getCurrent().at(-1)) && inputExpression.getCurrent().length) {
+        if (!operators.includes(inputExpression.getCurrentArray().at(-1)) && inputExpression.getCurrentArray().length) {
             inputExpression.addOperator('*');
         }
         inputExpression.increaseDepth();
-        console.log(inputExpression.getCurrent());
+        console.log(inputExpression.getCurrentArray());
         console.log(inputExpression.num);
 
     } else if (isCloseParenthesis) {
         inputExpression.applyNum();
-        if (!operators.includes(inputExpression.getCurrent().at(-1))) {
+        if (!operators.includes(inputExpression.getCurrentArray().at(-1))) {
             inputExpression.decreaseDepth();
         }
-        console.log(inputExpression.getCurrent());
+        console.log(inputExpression.getCurrentArray());
         console.log(inputExpression.num);
 
     } else if (buttonValue === 'CLEAR') {
         inputExpression = new Expression();
 
     } else if (buttonValue === '<=' || buttonValue === 'Backspace') {
-        inputExpression.removeLast()
+        inputExpression.goBackOne()
         resultDisplay.textContent = inputExpression.num;
-        console.log(inputExpression.num)
+        console.log(inputExpression.getCurrentArray())
+    }
 
-    } else if (buttonValue === '=' || buttonValue === 'Enter') {
+    resultDisplay.textContent = inputExpression.num;
+    expressionDisplay.textContent = inputExpression.display;
+
+    if (buttonValue === '=' || buttonValue === 'Enter') {
         // TODO Parse inputExpression and print out the result
         inputExpression.applyNum();
         inputExpression.flatten();
-        let result = parseDepths(inputExpression.getCurrent())
-        resultDisplay.textContent = result;
+        resultDisplay.textContent = parseDepths(inputExpression.getCurrentArray());
+        expressionDisplay.textContent = inputExpression.display;
         inputExpression = new Expression();
     }
-    expressionDisplay.textContent = inputExpression.display;
 }
 
 function parseDepths(arr) {
