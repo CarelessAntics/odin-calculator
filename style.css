@@ -93,8 +93,14 @@ body {
     border: solid #aaa 1px;
 }
 
-.equals {
+#keyEQ {
     background-color: lightblue;
+    color: #fff;
+}
+
+#keyCLR,
+#keyBSPACE {
+    background-color: #dd544a;
     color: #fff;
 }
 
