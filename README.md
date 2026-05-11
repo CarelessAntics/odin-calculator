@@ -3,6 +3,7 @@ A calculator app for The Odin Project foundations course
 
 ## Usage
 [LIVE DEMO HERE](https://carelessantics.github.io/odin-calculator/)
+
 Works like a regular calculator. Also accepts keyboard input
 
 ## Features
