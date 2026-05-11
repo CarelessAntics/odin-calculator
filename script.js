@@ -2,6 +2,23 @@ const output = document.querySelector('.calc-out');
 const calcBody = document.querySelector('.calc-body');
 const calcKeys = document.querySelector('.calc-keys');
 
+// Conversion table for css-invalid button labels and keypresses
+const labelToValid = {
+    '+': 'PLUS',
+    '-': 'MINUS',
+    '*': 'MULT',
+    '/': 'DIV',
+    '+/-': 'NEG',
+    '.': 'POINT',
+    ',': 'POINT',
+    '=': 'EQ',
+    'Enter': 'EQ',
+    'Backspace': '←',
+    '(': 'POPEN',
+    ')': 'PCLOSE',
+    '\'': 'NONE',
+}
+
 // ====================================
 // CALCULATOR VISUALS / USER FACING
 // ====================================
@@ -20,7 +37,8 @@ createNumKeys(calcKeys);
 calcBody.addEventListener('click', keyClick);
 addEventListener('keydown', keyPress);
 addEventListener('keyup', event => {
-    const keyID = `#key${event.key}`;
+    const label = labelToValid[event.key] || event.key
+    const keyID = `#key${label}`;
     const button = document.querySelector(keyID);
     if (button) button.classList.remove("active");
 });
@@ -37,8 +55,10 @@ function keyClick(event) {
 }
 
 function keyPress(event) {
+    if (['/'].includes(event.key)) event.preventDefault();
     buildFormula(event.key, inputExpression);
-    const keyID = `#key${event.key}`;
+    const label = labelToValid[event.key] || event.key
+    const keyID = `#key${label}`;
     const button = document.querySelector(keyID);
     if (button) button.classList.add("active");
 }
@@ -88,7 +108,8 @@ function createNumKeys(parentElem) {
 
 function makeKey(key) {
     let elem = document.createElement('div');
-    elem.id = `key${key}`;
+    let label = labelToValid[key] || key;
+    elem.id = `key${label}`;
     elem.classList.add('key');
     elem.innerHTML = `<span>${key}</span>`;
 
@@ -251,7 +272,8 @@ function buildFormula(buttonValue, expressionObj) {
                                     && typeof expressionObj.getCurrentArray().at(-1) === 'string' // Previous element is string, a.k.a not an array
                                     && expressionObj.getCurrentArray().length; // Current array isn't empty
     const isDecimalPoint        = (buttonValue === '.' || buttonValue === ',')
-                                    && !expressionObj.num.includes('.');
+                                    && (!expressionObj.num.includes('.')
+                                    && !expressionObj.num.includes(','));
     const isDigit               = /^[0-9]+/.test(buttonValue);
     const isOpenParenthesis     = buttonValue === '(';
     const isCloseParenthesis    = buttonValue === ')';
@@ -285,8 +307,13 @@ function buildFormula(buttonValue, expressionObj) {
         expressionObj.changeLastOperator(buttonValue);
 
     } else if (isDecimalPoint) {
-        expressionObj.addDigit(buttonValue);
-
+        if (expressionObj.num) {
+            expressionObj.addDigit('.');
+        } else {
+            expressionObj.addDigit(0);
+            expressionObj.addDigit('.');
+        }
+        
     } else if (isDigit) {
         expressionObj.addDigit(buttonValue);
 
