@@ -18,11 +18,7 @@ expressionDisplay.classList.add("expression");
 output.appendChild(resultDisplay);
 output.appendChild(expressionDisplay);
 
-const numKeys = createNumKeys();
-const equalsKey = makeKey("=");
-
-calcKeys.appendChild(numKeys);
-calcKeys.appendChild(equalsKey);
+createNumKeys(calcKeys);
 
 calcBody.addEventListener('click', keyClick);
 addEventListener('keydown', keyPress);
@@ -42,36 +38,47 @@ function keyPress(event) {
     buildFormula(event.key, inputExpression);
 }
 
-function createNumKeys() {
+function createNumKeys(parentElem) {
     // Current layout generator switches rows after 4 elements
-     const numbers = ['(', ')', '<=', 'CLEAR',
+     const numbers = ['(', ')', '←', 'CLR',
                       7, 8, 9, '/',
                       4, 5, 6, '*',
                       1, 2, 3, '-',
-                      '+/-', 0, '.', '+'];
+                      '+/-', 0, '.', '+',
+                      '='
+                    ];
 
     const elementsPerRow = 4;
     let counter = 0;
     let row;
-    const numberKeys = document.createElement('div');
 
     for (num of numbers) {
         if (counter % elementsPerRow === 0) {
             if (row) {
-                numberKeys.appendChild(row);
+                parentElem.appendChild(row);
             }
             row = document.createElement('div');
             row.classList.add('key-row');
         }
 
         let numKey = makeSquare(makeKey(num));
+        if (/^[0-9]/.test(num)) {
+            numKey.classList.add("num")
+            numKey.style.setProperty('--shadow-color', '#ccc')
+        }
+        if (/^[=]/.test(num)) {
+            numKey.classList.add("equals")
+            numKey.style.setProperty('--shadow-color', '#abc')
+        }
+        if (/^[ ]/.test(num)) {
+            numKey.classList.add("empty")
+        }
+
         row.appendChild(numKey);
         counter++;
     }
-    numberKeys.appendChild(row);
-    //calcKeys.appendChild(numberKeys);
 
-    return numberKeys
+    parentElem.appendChild(row);
 }
 
 function makeKey(key) {
@@ -243,10 +250,11 @@ function buildFormula(buttonValue, expressionObj) {
     const isDigit               = /^[0-9]+/.test(buttonValue);
     const isOpenParenthesis     = buttonValue === '(';
     const isCloseParenthesis    = buttonValue === ')';
-    const isClear               = buttonValue === 'CLEAR';
+    const isClear               = buttonValue === 'CLR';
     const isNegation            = buttonValue === '+/-';
     const isBackspace           = buttonValue === '<=' 
-                                    || buttonValue === 'Backspace';
+                                    || buttonValue === 'Backspace'
+                                    || buttonValue === '←';
     const isEnter               = buttonValue === '=' 
                                     || buttonValue === 'Enter';
 
@@ -310,7 +318,7 @@ function buildFormula(buttonValue, expressionObj) {
         expressionObj.applyNum();
         expressionObj.flatten();
         resultDisplay.textContent = parseExpression(expressionObj.getCurrentArray());
-        expressionDisplay.textContent = expressionObj.display;
+        expressionDisplay.textContent = expressionObj.display + ' =';
         // expressionObj = new Expression();
         expressionObj.reset();
     }

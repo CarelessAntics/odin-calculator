@@ -1,7 +1,7 @@
 * {
     margin: 0;
     padding: 0;
-    border: solid #000 1px;
+    /*border: solid #000 1px;*/
 }
 
 body {
@@ -10,6 +10,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 .container {
@@ -21,7 +22,7 @@ body {
 
 .sidebar {
     flex: 1;
-    background-color: #aaa;
+    /*background-color: #aaa;*/
 }
 
 .col {
@@ -31,8 +32,19 @@ body {
 .calc-body {
     display: flex;
     flex-direction: column;
-    flex: 0 1 25%;
+    flex: 0 1 400px;
     align-self: center;
+    padding: 42px 24px;
+    border-radius: 24px;
+    box-shadow: 8px 8px 18px 6px #ddd;
+}
+
+.calc-body hr {
+    background-color: #ddd;
+    margin: 24px 32px;
+    border: 0;
+    height: 3px;
+    border-radius: 3px;
 }
 
 .calc-keys {
@@ -44,15 +56,19 @@ body {
 
 .key-row {
     display: flex;
-    flex: 0 1 0;
-    background: #0f0;
-    gap: 12px
+    flex: 1;
+    gap: 12px;
 }
 
 .key {
     flex: 1 0 50px;
     height: 50px;
-    border: solid #aaa 1px;
+    border-radius: 32px;
+    box-shadow: 5px 5px 3px #ccc;
+    background-color: #999;
+    color: #eee;
+    font-size: 22px;
+    font-weight: 100;
     text-align: center;
     box-sizing: border-box;
     display: flex;
@@ -60,18 +76,46 @@ body {
     justify-content: center;
 }
 
+.key:hover {
+    box-shadow: none;
+}
+
+.key:active {
+    box-shadow: inset 5px 5px 3px var(--shadow-color, #666);
+}
+
 .key span {
     user-select: none;
+}
+
+.num {
+    background-color: #eee;
+    color: #666;
+    border: solid #aaa 1px;
+}
+
+.equals {
+    background-color: lightblue;
+    color: #fff;
 }
 
 .aspect-1 {
     aspect-ratio: 1;
 }
 
+.empty {
+    visibility: hidden;
+}
+
 .calc-out {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    box-shadow: inset 0 0 16px #ccc;
+    color: #999;
+    border-radius: 8px;
+    box-sizing: border-box;
+    padding: 12px;
 }
 
 .result {
@@ -79,7 +123,6 @@ body {
     font-size: 32px;
     line-height: 42px;;
     box-sizing: border-box;
-
 }
 
 .expression {
