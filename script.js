@@ -92,13 +92,8 @@ function createNumKeys(parentElem) {
             numKey.classList.add("num")
             numKey.style.setProperty('--shadow-color', '#ccc')
         }
-        if (/^[=]/.test(num)) {
-            numKey.classList.add("equals")
-            numKey.style.setProperty('--shadow-color', '#abc')
-        }
-        if (/^[ ]/.test(num)) {
-            numKey.classList.add("empty")
-        }
+        if (/^[=]/.test(num)) numKey.style.setProperty('--shadow-color', '#abc');
+        if (/^[ ]/.test(num)) numKey.classList.add("empty");
 
         row.appendChild(numKey);
         counter++;
