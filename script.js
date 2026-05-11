@@ -225,6 +225,7 @@ function Expression() {
                 // If the new last element is a number (not an array), return it to be editable
                 if (!Array.isArray(this.getCurrentArray().at(-1))) {
                     this.num = this.getCurrentArray().pop();
+                    this.display = this.display.slice(0, -(this.num.length + 1));
                 }
                 return;
             }
@@ -233,7 +234,12 @@ function Expression() {
             if (Array.isArray(this.getCurrentArray().at(-1))) {
                 this[this.depth + 1] = this.getCurrentArray().pop();
                 this.depth += 1;
-                this.num = this.getCurrentArray().pop()
+
+                // If the last element in the new array is no longer an array
+                if (!Array.isArray(this.getCurrentArray().at(-1))) {
+                    this.num = this.getCurrentArray().pop()
+                    this.display = this.display.slice(0, -(this.num.length + 1));
+                }
                 return;
             }
 
