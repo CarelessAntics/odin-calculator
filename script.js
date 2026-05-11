@@ -278,7 +278,8 @@ function buildFormula(buttonValue, expressionObj) {
                                     && !expressionObj.num.includes(','));
     const isDigit               = /^[0-9]+/.test(buttonValue);
     const isOpenParenthesis     = buttonValue === '(';
-    const isCloseParenthesis    = buttonValue === ')';
+    const isCloseParenthesis    = buttonValue === ')'
+                                    && expressionObj.depth > 0;
     const isClear               = buttonValue === 'CLR';
     const isNegation            = buttonValue === '+/-';
     const isBackspace           = buttonValue === '<=' 
