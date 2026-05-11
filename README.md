@@ -2,7 +2,7 @@
 A calculator app for The Odin Project foundations course
 
 ## Usage
-[[https://carelessantics.github.io/odin-calculator/|LIVE DEMO HERE]]
+[LIVE DEMO HERE](https://carelessantics.github.io/odin-calculator/)
 Works like a regular calculator. Also accepts keyboard input
 
 ## Features
