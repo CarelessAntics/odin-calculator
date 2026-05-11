@@ -186,6 +186,9 @@ function Expression() {
                 return;
             }
 
+            // const displaySymbol = this.display.slice(-2);
+            this.display = this.display.slice(0, -2);
+
             // Case: The last element is an operator
             if (this.supportedOps.includes(this.getCurrentArray().at(-1))) {
                 this.getCurrentArray().pop(); // the operator
@@ -228,17 +231,39 @@ function buildFormula(buttonValue, expressionObj) {
 
     // Booleans for different actions based on user input
     // This looks disgusting, but I can't think of a way to make it prettier or more readable
-    const isOperator = operators.includes(buttonValue) 
-                       && (expressionObj.num || Array.isArray(expressionObj.getCurrentArray().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
-    const isOperatorChange = operators.includes(buttonValue) // is operator
-                            && !expressionObj.num // Current number buffer is empty
-                            && typeof expressionObj.getCurrentArray().at(-1) === 'string' // Previous element is string, a.k.a not an array
-                            && expressionObj.getCurrentArray().length; // Current array isn't empty
-    const isDecimalPoint = (buttonValue === '.' || buttonValue === ',') // I'm a European heathen who allows commas as decimal separators
-                            && !expressionObj.num.includes('.'); // Does the number already have a decimal point in it
-    const isDigit = /^[0-9]+/.test(buttonValue);
-    const isOpenParenthesis = buttonValue === '(';
-    const isCloseParenthesis = buttonValue === ')';
+    const isOperator            = operators.includes(buttonValue) 
+                                    && (expressionObj.num 
+                                        || Array.isArray(expressionObj.getCurrentArray().at(-1))); // Either numbers exist in the buffer or we just closed parentheses
+    const isOperatorChange      = operators.includes(buttonValue) 
+                                    && !expressionObj.num // Current number buffer is empty
+                                    && typeof expressionObj.getCurrentArray().at(-1) === 'string' // Previous element is string, a.k.a not an array
+                                    && expressionObj.getCurrentArray().length; // Current array isn't empty
+    const isDecimalPoint        = (buttonValue === '.' || buttonValue === ',')
+                                    && !expressionObj.num.includes('.');
+    const isDigit               = /^[0-9]+/.test(buttonValue);
+    const isOpenParenthesis     = buttonValue === '(';
+    const isCloseParenthesis    = buttonValue === ')';
+    const isClear               = buttonValue === 'CLEAR';
+    const isNegation            = buttonValue === '+/-';
+    const isBackspace           = buttonValue === '<=' 
+                                    || buttonValue === 'Backspace';
+    const isEnter               = buttonValue === '=' 
+                                    || buttonValue === 'Enter';
+
+    const allChecks = [ isOperator, 
+                        isOperatorChange, 
+                        isDecimalPoint, 
+                        isDigit, 
+                        isOpenParenthesis, 
+                        isCloseParenthesis,
+                        isClear,
+                        isNegation,
+                        isBackspace,
+                        isEnter,
+                        ];
+
+    // Only accept valid checks
+    if (!allChecks.some(item => item)) return;
 
     if (isOperator) {
         expressionObj.addOperator(buttonValue);
@@ -267,21 +292,21 @@ function buildFormula(buttonValue, expressionObj) {
             expressionObj.decreaseDepth();
         }
     
-    } else if (buttonValue === '+/-') {
+    } else if (isNegation) {
         expressionObj.flipSign();
 
-    } else if (buttonValue === 'CLEAR') {
+    } else if (isClear) {
         expressionObj.flatten();
         expressionObj.reset();
 
-    } else if (buttonValue === '<=' || buttonValue === 'Backspace') {
+    } else if (isBackspace) {
         expressionObj.goBackOne()
     }
 
     resultDisplay.textContent = expressionObj.num;
     expressionDisplay.textContent = expressionObj.display;
 
-    if (buttonValue === '=' || buttonValue === 'Enter') {
+    if (isEnter) {
         expressionObj.applyNum();
         expressionObj.flatten();
         resultDisplay.textContent = parseExpression(expressionObj.getCurrentArray());
