@@ -47,17 +47,15 @@ body {
     border-radius: 3px;
 }
 
-.calc-keys {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
+.calc-keys,
+.key-row {
     gap: 12px;
+    flex: 1;
+    display: flex;
 }
 
-.key-row {
-    display: flex;
-    flex: 1;
-    gap: 12px;
+.calc-keys {
+    flex-direction: column;
 }
 
 .key {
@@ -80,7 +78,8 @@ body {
     box-shadow: none;
 }
 
-.key:active {
+.key:active,
+.key.active {
     box-shadow: inset 5px 5px 3px var(--shadow-color, #666);
 }
 

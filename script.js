@@ -2,9 +2,6 @@ const output = document.querySelector('.calc-out');
 const calcBody = document.querySelector('.calc-body');
 const calcKeys = document.querySelector('.calc-keys');
 
-// TODO output section for the calculator
-// TODO make pretty
-
 // ====================================
 // CALCULATOR VISUALS / USER FACING
 // ====================================
@@ -22,6 +19,11 @@ createNumKeys(calcKeys);
 
 calcBody.addEventListener('click', keyClick);
 addEventListener('keydown', keyPress);
+addEventListener('keyup', event => {
+    const keyID = `#key${event.key}`;
+    const button = document.querySelector(keyID);
+    if (button) button.classList.remove("active");
+});
 
 function keyClick(event) {
     let target = event.target
@@ -36,23 +38,26 @@ function keyClick(event) {
 
 function keyPress(event) {
     buildFormula(event.key, inputExpression);
+    const keyID = `#key${event.key}`;
+    const button = document.querySelector(keyID);
+    if (button) button.classList.add("active");
 }
 
 function createNumKeys(parentElem) {
     // Current layout generator switches rows after 4 elements
-     const numbers = ['(', ')', '←', 'CLR',
-                      7, 8, 9, '/',
-                      4, 5, 6, '*',
-                      1, 2, 3, '-',
-                      '+/-', 0, '.', '+',
-                      '='
-                    ];
+     const buttonLabels = ['(', ')', '←', 'CLR',
+                            7, 8, 9, '/',
+                            4, 5, 6, '*',
+                            1, 2, 3, '-',
+                            '+/-', 0, '.', '+',
+                            '='
+                            ];
 
     const elementsPerRow = 4;
     let counter = 0;
     let row;
 
-    for (num of numbers) {
+    for (num of buttonLabels) {
         if (counter % elementsPerRow === 0) {
             if (row) {
                 parentElem.appendChild(row);
