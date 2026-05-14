@@ -131,10 +131,15 @@ body {
     font-size: 32px;
     line-height: 42px;;
     box-sizing: border-box;
+    inline-size: 100%;
+    text-align: right;
+    display: inline-block;
+    word-break: break-word;
 }
 
 .expression {
     flex: 1 0 24px;
     font-size: 18px;
     line-height: 24px;
+    word-break: break-all;
 }
